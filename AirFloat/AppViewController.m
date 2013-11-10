@@ -49,6 +49,7 @@
     UIViewController* _overlaidViewController;
     UIImage* _artworkImage;
     NSString* _albumTitle;
+    NSNumber* _trackDuration;
     
 }
 
@@ -69,7 +70,7 @@
 - (void)clientEndedRecording;
 - (void)clientEnded;
 - (void)clientUpdatedArtwork:(UIImage *)image;
-- (void)clientUpdatedTrackInfo:(NSString *)trackTitle artistName:(NSString *)artistName andAlbumTitle:(NSString *)albumTitle;
+- (void)clientUpdatedTrackInfo:(NSString *)trackTitle artistName:(NSString *)artistName albumTitle:(NSString *)albumTitle andTrackDuration:(NSNumber *)trackDuration;
 - (void)setDacpClient:(NSValue*)pointer;
 - (void)updatePlaybackState;
 - (void)updateControlsAvailability;
@@ -165,7 +166,7 @@ void clientUpdatedArtwork(raop_session_p raop_session, const void* data, size_t 
     
 }
 
-void clientUpdatedTrackInfo(raop_session_p raop_session, const char* title, const char* artist, const char* album, void* ctx) {
+void clientUpdatedTrackInfo(raop_session_p raop_session, const char* title, const char* artist, const char* album, const long duration, void* ctx) {
     
     NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
     
@@ -174,13 +175,15 @@ void clientUpdatedTrackInfo(raop_session_p raop_session, const char* title, cons
     NSString* trackTitle = [[NSString alloc] initWithCString:title encoding:NSUTF8StringEncoding];
     NSString* artistTitle = [[NSString alloc] initWithCString:artist encoding:NSUTF8StringEncoding];
     NSString* albumTitle = [[NSString alloc] initWithCString:album encoding:NSUTF8StringEncoding];
+    NSNumber* trackDuration = [[NSNumber alloc] initWithLong:duration/1000];
     
-    NSInvocation* invocation = [NSInvocation invocationWithMethodSignature:[viewController methodSignatureForSelector:@selector(clientUpdatedTrackInfo:artistName:andAlbumTitle:)]];
-    [invocation setSelector:@selector(clientUpdatedTrackInfo:artistName:andAlbumTitle:)];
+    NSInvocation* invocation = [NSInvocation invocationWithMethodSignature:[viewController methodSignatureForSelector:@selector(clientUpdatedTrackInfo:artistName:albumTitle:andTrackDuration:)]];
+    [invocation setSelector:@selector(clientUpdatedTrackInfo:artistName:albumTitle:andTrackDuration:)];
     [invocation setTarget:viewController];
     [invocation setArgument:&trackTitle atIndex:2];
     [invocation setArgument:&artistTitle atIndex:3];
     [invocation setArgument:&albumTitle atIndex:4];
+    [invocation setArgument:&trackDuration atIndex:5];
     [invocation retainArguments];
     
     [invocation performSelectorOnMainThread:@selector(invoke) withObject:nil waitUntilDone:YES];
@@ -440,6 +443,11 @@ void newServerSession(raop_server_p server, raop_session_p new_session, void* ct
                     [nowPlayingInfo setObject:[[[MPMediaItemArtwork alloc] initWithImage:_artworkImage] autorelease]
                                    forKey:MPMediaItemPropertyArtwork];
                 
+                if (_trackDuration)
+                    [nowPlayingInfo setObject:_trackDuration forKey:MPMediaItemPropertyPlaybackDuration];
+                
+                [nowPlayingInfo setObject:[NSNumber numberWithLong:1] forKey:MPNowPlayingInfoPropertyPlaybackRate];
+                [nowPlayingInfo setObject:[NSNumber numberWithLong:0] forKey:MPNowPlayingInfoPropertyElapsedPlaybackTime];
                 [MPNowPlayingInfoCenter defaultCenter].nowPlayingInfo = nowPlayingInfo;
                 
             }
@@ -533,6 +541,8 @@ void newServerSession(raop_server_p server, raop_session_p new_session, void* ct
                          _artworkImage = nil;
                          [_albumTitle release];
                          _albumTitle = nil;
+                         [_trackDuration release];
+                         _trackDuration = nil;
                      }];
     
     [self.adView startAnimation];
@@ -591,13 +601,16 @@ void newServerSession(raop_server_p server, raop_session_p new_session, void* ct
     
 }
 
-- (void)clientUpdatedTrackInfo:(NSString *)trackTitle artistName:(NSString *)artistName andAlbumTitle:(NSString *)albumTitle {
+- (void)clientUpdatedTrackInfo:(NSString *)trackTitle artistName:(NSString *)artistName albumTitle:(NSString *)albumTitle andTrackDuration:(NSNumber *)trackDuration {
     
     self.trackTitelLabel.text = trackTitle;
     self.artistNameLabel.text = artistName;
     
     [_albumTitle release];
     _albumTitle = albumTitle;
+    
+    [_trackDuration release];
+    _trackDuration = trackDuration;
     
     [self updateNowPlayingInfoCenter];
     

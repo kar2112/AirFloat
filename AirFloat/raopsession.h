@@ -43,7 +43,7 @@ typedef struct raop_session_t *raop_session_p;
 typedef void(*raop_session_client_initiated_callback)(raop_session_p raop_session, void* ctx);
 typedef void(*raop_session_client_started_recording_callback)(raop_session_p raop_session, void* ctx);
 typedef void(*raop_session_client_ended_recording_callback)(raop_session_p raop_session, void* ctx);
-typedef void(*raop_session_client_updated_track_info_callback)(raop_session_p raop_session, const char* title, const char* artist, const char* album, void* ctx);
+typedef void(*raop_session_client_updated_track_info_callback)(raop_session_p raop_session, const char* title, const char* artist, const char* album, const long duration, void* ctx);
 typedef void(*raop_session_client_updated_track_position_callback)(raop_session_p raop_session, double position, double total, void* ctx);
 typedef void(*raop_session_client_updated_artwork_callback)(raop_session_p raop_session, const void* data, size_t data_size, const char* mime_type, void* ctx);
 typedef void(*raop_session_ended_callback)(raop_session_p rs, void* ctx);

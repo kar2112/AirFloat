@@ -523,8 +523,9 @@ void _raop_session_raop_connection_request_callback(web_server_connection_p conn
                             const char* title = dmap_string_for_atom_identifer(track_tags, "dmap.itemname");
                             const char* artist = dmap_string_for_atom_identifer(track_tags, "daap.songartist");
                             const char* album = dmap_string_for_atom_identifer(track_tags, "daap.songalbum");
+                            const long duration = dmap_long_for_atom_identifer(track_tags, "daap.songtime");
                             
-                            rs->callbacks.updated_track_info(rs, title, artist, album, rs->callbacks.ctx.updated_track_info);
+                            rs->callbacks.updated_track_info(rs, title, artist, album, duration, rs->callbacks.ctx.updated_track_info);
                             
                         }
                         
