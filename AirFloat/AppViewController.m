@@ -218,6 +218,7 @@ void newServerSession(raop_server_p server, raop_session_p new_session, void* ct
     
     [_artworkImage release];
     [_albumTitle release];
+    [_trackDuration release];
     
     [super dealloc];
     
@@ -446,8 +447,9 @@ void newServerSession(raop_server_p server, raop_session_p new_session, void* ct
                 if (_trackDuration)
                     [nowPlayingInfo setObject:_trackDuration forKey:MPMediaItemPropertyPlaybackDuration];
                 
-                [nowPlayingInfo setObject:[NSNumber numberWithLong:1] forKey:MPNowPlayingInfoPropertyPlaybackRate];
-                [nowPlayingInfo setObject:[NSNumber numberWithLong:0] forKey:MPNowPlayingInfoPropertyElapsedPlaybackTime];
+                bool playing = (dacp_client_get_playback_state(_dacp_client) == dacp_client_playback_state_playing);
+                [nowPlayingInfo setObject:[NSNumber numberWithDouble:(playing ? 1.0 : 0)] forKey:MPNowPlayingInfoPropertyPlaybackRate];
+                [nowPlayingInfo setObject:[NSNumber numberWithDouble:0] forKey:MPNowPlayingInfoPropertyElapsedPlaybackTime];
                 [MPNowPlayingInfoCenter defaultCenter].nowPlayingInfo = nowPlayingInfo;
                 
             }
@@ -631,6 +633,7 @@ void newServerSession(raop_server_p server, raop_session_p new_session, void* ct
         [self.playButton setImage:[UIImage imageNamed:(playing ? @"Pause.png" : @"Play.png")]
                          forState:UIControlStateNormal];
         
+        [self updateNowPlayingInfoCenter];
     }
     
 }
